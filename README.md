@@ -1,5 +1,5 @@
 ### 代码生成器
-go install github.com/Madou-Shinni/gctl@latest
+`go install github.com/Madou-Shinni/gctl@latest`
 ```go
 gctl -m Article 自动生成代码
 生成代码如下

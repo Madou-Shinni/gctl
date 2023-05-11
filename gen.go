@@ -12,8 +12,9 @@ import (
 )
 
 type Temp struct {
-	Module      string // 模块名
-	ModuleLower string
+	Module             string // 模块名
+	ModuleLower        string
+	ModuleCamelToSnake string
 }
 
 func main() {
@@ -46,8 +47,9 @@ func gen(c *cli.Context) error {
 	// 定义变量
 	//k v
 	data := Temp{
-		Module:      s,
-		ModuleLower: strings.ToLower(s[:1]) + s[1:],
+		Module:             s,
+		ModuleLower:        strings.ToLower(s[:1]) + s[1:],
+		ModuleCamelToSnake: str.CamelToSnake(s),
 	}
 
 	templateDir := "cmd/template"
