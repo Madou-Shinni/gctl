@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"github.com/Madou-Shinni/gin-quickstart/pkg/tools/str"
 	"github.com/urfave/cli/v2"
@@ -9,6 +10,10 @@ import (
 	"strings"
 	"sync"
 	"text/template"
+)
+
+var (
+	defaultInitRoutersDir = "initialization/router.go"
 )
 
 type Temp struct {
@@ -98,6 +103,11 @@ func gen(c *cli.Context) error {
 		return err
 	}
 
+	err = insertRouterRegister(defaultInitRoutersDir, s)
+	if err != nil {
+		return err
+	}
+
 	fmt.Println("gen code success")
 
 	return nil
@@ -140,6 +150,61 @@ func writeOutput(module string, sliceItem string, data Temp, f *os.File, t *temp
 	defer f.Close()
 
 	err = t.Execute(f, data)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// insertRouterRegister 在注册路由的位置插入新的路由注册代码
+func insertRouterRegister(targetFile, moduleName string) error {
+	// 读取目标文件内容
+	fileContent, err := os.ReadFile(targetFile)
+	if err != nil {
+		fmt.Println("Error reading file:", err)
+		return nil
+	}
+
+	scanner := bufio.NewScanner(strings.NewReader(string(fileContent)))
+	var output strings.Builder
+
+	foundRegistrationSection := false
+	lastRouterRegisterLine := -1
+	lines := []string{}
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		lines = append(lines, line)
+
+		if strings.Contains(line, "// 注册路由") {
+			foundRegistrationSection = true
+		}
+
+		if foundRegistrationSection && strings.Contains(line, "routers.") && strings.Contains(line, "RouterRegister") {
+			lastRouterRegisterLine = len(lines) - 1
+		}
+	}
+
+	if lastRouterRegisterLine != -1 {
+		for i, line := range lines {
+			output.WriteString(line + "\n")
+			if i == lastRouterRegisterLine {
+				output.WriteString(fmt.Sprintf("\trouters.%sRouterRegister(public)\n", moduleName))
+			}
+		}
+	} else {
+		// 如果没有找到注册路由部分，则在 // 注册路由 下添加
+		for _, line := range lines {
+			output.WriteString(line + "\n")
+			if strings.Contains(line, "// 注册路由") {
+				output.WriteString(fmt.Sprintf("\t\trouters.%sRouterRegister(public)\n", moduleName))
+			}
+		}
+	}
+
+	// 写回文件
+	err = os.WriteFile(targetFile, []byte(output.String()), os.ModePerm)
 	if err != nil {
 		return err
 	}
