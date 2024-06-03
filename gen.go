@@ -14,6 +14,7 @@ import (
 
 var (
 	defaultInitRoutersDir = "initialization/router.go"
+	defaultInitDataDir    = "initialization/data.go"
 )
 
 type Temp struct {
@@ -108,6 +109,8 @@ func gen(c *cli.Context) error {
 		return err
 	}
 
+	err = insertDataAutoMigrate(defaultInitDataDir, s)
+
 	fmt.Println("gen code success")
 
 	return nil
@@ -198,7 +201,62 @@ func insertRouterRegister(targetFile, moduleName string) error {
 		for _, line := range lines {
 			output.WriteString(line + "\n")
 			if strings.Contains(line, "// 注册路由") {
-				output.WriteString(fmt.Sprintf("\t\trouters.%sRouterRegister(public)\n", moduleName))
+				output.WriteString(fmt.Sprintf("\trouters.%sRouterRegister(public)\n", moduleName))
+			}
+		}
+	}
+
+	// 写回文件
+	err = os.WriteFile(targetFile, []byte(output.String()), os.ModePerm)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// insertDataAutoMigrate 在自动迁移的位置插入新的自动迁移代码
+func insertDataAutoMigrate(targetFile, moduleName string) error {
+	// 读取目标文件内容
+	fileContent, err := os.ReadFile(targetFile)
+	if err != nil {
+		fmt.Println("Error reading file:", err)
+		return nil
+	}
+
+	scanner := bufio.NewScanner(strings.NewReader(string(fileContent)))
+	var output strings.Builder
+
+	foundRegistrationSection := false
+	lastAuthMigrateLine := -1
+	lines := []string{}
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		lines = append(lines, line)
+
+		if strings.Contains(line, "// 自动迁移") {
+			foundRegistrationSection = true
+		}
+
+		if foundRegistrationSection && strings.Contains(line, "domain.") && strings.Contains(line, "{}") {
+			lastAuthMigrateLine = len(lines) - 1
+		}
+	}
+
+	if lastAuthMigrateLine != -1 {
+		for i, line := range lines {
+			output.WriteString(line + "\n")
+			if i == lastAuthMigrateLine {
+				output.WriteString(fmt.Sprintf("\t\tdomain.%s{},\n", moduleName))
+			}
+		}
+	} else {
+		// 如果没有找到注册路由部分，则在 // 注册路由 下添加
+		for _, line := range lines {
+			output.WriteString(line + "\n")
+			if strings.Contains(line, "// 自动迁移") {
+				output.WriteString(fmt.Sprintf("\tdb.AutoMigrate(\n\t\t// 表\n\t\tdomain.%s{},\n\t)\n", moduleName))
 			}
 		}
 	}
