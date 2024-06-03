@@ -15,6 +15,7 @@ import (
 var (
 	defaultInitRoutersDir = "initialization/router.go"
 	defaultInitDataDir    = "initialization/data.go"
+	version               = "1.2.0"
 )
 
 type Temp struct {
@@ -25,6 +26,7 @@ type Temp struct {
 
 func main() {
 	app := &cli.App{
+		Version: version,
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:     "module",
