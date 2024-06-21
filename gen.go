@@ -5,16 +5,18 @@ import (
 	"fmt"
 	"github.com/Madou-Shinni/gin-quickstart/pkg/tools/str"
 	"github.com/urfave/cli/v2"
+	"io/fs"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"text/template"
 )
 
 var (
-	defaultInitRoutersDir = "initialization/router.go"
-	defaultInitDataDir    = "initialization/data.go"
+	defaultInitRoutersDir = "initialize/router.go"
+	defaultInitDataDir    = "initialize/data.go"
 	version               = "1.2.0"
 )
 
@@ -76,6 +78,12 @@ func gen(c *cli.Context) error {
 		}
 	}
 
+	err = checkFile(s)
+	if err != nil {
+		log.Fatalln(err)
+		return err
+	}
+
 	wg.Add(len(tempSlice))
 	for i := 0; i < len(tempSlice); i++ {
 		// 启动5个goroutine生成不同的模板文件
@@ -113,9 +121,23 @@ func gen(c *cli.Context) error {
 
 	err = insertDataAutoMigrate(defaultInitDataDir, s)
 
-	fmt.Println("gen code success")
+	log.Println("gen code success")
 
 	return nil
+}
+
+// 检查文件在目录下是否存在
+func checkFile(s string) error {
+	return filepath.Walk("internal", func(path string, d fs.FileInfo, err error) error {
+		if d.IsDir() {
+			return nil
+		}
+
+		if d.Name() == fmt.Sprint(str.CamelToSnake(s), ".go") {
+			return fmt.Errorf("\033[31m file %s exists \033[0m", fmt.Sprint(path))
+		}
+		return nil
+	})
 }
 
 // 写出文件
