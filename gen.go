@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/Madou-Shinni/gin-quickstart/pkg/tools/str"
-	"github.com/urfave/cli/v2"
 	"log"
 	"os"
 	"path/filepath"
@@ -16,7 +15,7 @@ import (
 var (
 	defaultInitRoutersDir = "initialize/router.go"
 	defaultInitDataDir    = "initialize/data.go"
-	version               = "1.2.0"
+	version               = "1.3.0"
 )
 
 type Temp struct {
