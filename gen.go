@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/Madou-Shinni/gin-quickstart/pkg/tools/str"
 	"github.com/urfave/cli/v2"
-	"io/fs"
 	"log"
 	"os"
 	"path/filepath"
@@ -128,13 +127,29 @@ func gen(c *cli.Context) error {
 
 // 检查文件在目录下是否存在
 func checkFile(s string) error {
-	return filepath.Walk("internal", func(path string, d fs.FileInfo, err error) error {
-		if d.IsDir() {
+	directories := []string{"internal", "api"}
+
+	for _, dir := range directories {
+		err := checkFileInDirectory(dir, s)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// checkFileInDirectory 在给定目录下检查文件是否存在
+func checkFileInDirectory(directory, filename string) error {
+	return filepath.Walk(directory, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() {
 			return nil
 		}
-
-		if d.Name() == fmt.Sprint(str.CamelToSnake(s), ".go") {
-			return fmt.Errorf("\033[31m file %s exists \033[0m", fmt.Sprint(path))
+		if info.Name() == fmt.Sprint(str.CamelToSnake(filename), ".go") {
+			return fmt.Errorf("\033[31m file %s exists \033[0m", path)
 		}
 		return nil
 	})
