@@ -16,7 +16,7 @@ import (
 var (
 	defaultInitRoutersDir = "initialize/router.go"
 	defaultInitDataDir    = "initialize/data.go"
-	version               = "1.3.0"
+	version               = "1.3.2"
 )
 
 type Temp struct {
