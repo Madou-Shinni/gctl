@@ -3,20 +3,21 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"github.com/Madou-Shinni/gin-quickstart/pkg/tools/str"
-	"github.com/urfave/cli/v2"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
 	"text/template"
+
+	"github.com/Madou-Shinni/gin-quickstart/pkg/tools/str"
+	"github.com/urfave/cli/v2"
 )
 
 var (
-	defaultInitRoutersDir = "initialize/router.go"
+	defaultInitRoutersDir = "route/router.go"
 	defaultInitDataDir    = "initialize/data.go"
-	version               = "1.3.0"
+	version               = "1.4.0"
 )
 
 type Temp struct {
